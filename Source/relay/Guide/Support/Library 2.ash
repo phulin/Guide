@@ -18,7 +18,7 @@ string HTMLGenerateFutureTextByLocationAvailability(string base_text, location p
 
 string HTMLGenerateFutureTextByLocationAvailability(location place)
 {
-	return HTMLGenerateFutureTextByLocationAvailability(place.to_string(), place);
+    return HTMLGenerateFutureTextByLocationAvailability(place.to_string(), place);
 }
 
 //Alternate name, since last time I tried making this function then discovered the "generate future text" options which I cleverly named in such a way that I would never find it
@@ -39,7 +39,7 @@ boolean can_equip_replacement(item it)
     if (it.equipped_amount() > 0)
         return true;
     if (it.item_type() == "chefstaff" && !($skill[Spirit of Rigatoni].have_skill() || my_class() == $class[Avatar of Jarlsberg] || (my_class() == $class[sauceror] && $item[special sauce glove].equipped_amount() > 0)))
-    	return false;
+        return false;
     boolean can_equip = it.can_equip();
     if (can_equip)
         return true;
@@ -276,15 +276,15 @@ int PathCommunityServiceEstimateTurnsTakenForTask(string service_name)
     }
     else if (service_name == "Make Margaritas")
     {
-    	float item_drop = numeric_modifier("Item Drop");
+        float item_drop = numeric_modifier("Item Drop");
         //Mafia adds item drop modifiers depending on our location.
         //set_location() is slow, we want to avoid it.
         //Manually correct:
         if ($skill[Speluck].have_skill() && my_location().environment == "underground")
         {
-        	item_drop -= 5.0;
+            item_drop -= 5.0;
             if ($effect[Steely-Eyed Squint].have_effect() > 0)
-            	item_drop -= 5.0;
+                item_drop -= 5.0;
         }
         turns = 60 - (floor(item_drop / 30) + floor(numeric_modifier("Booze Drop") / 15));
     }
@@ -325,7 +325,7 @@ int PathCommunityServiceEstimateTurnsTakenForTask(string service_name)
         
         foreach s in $slots[hat,weapon,off-hand,back,shirt,pants,acc1,acc2,acc3,familiar]
         {
-        	item it = s.equipped_item();
+            item it = s.equipped_item();
             if (it.to_slot() != $slot[weapon]) continue;
             int power = it.get_power();
             float addition = to_float(power) * 0.15;
@@ -380,33 +380,30 @@ KramcoSausageFightInformation KramcoCalculateSausageFightInformation()
     KramcoSausageFightInformation information;
     int last_sausage_turn = get_property_int("_lastSausageMonsterTurn"); //FIXME
     int sausage_fights = get_property_int("_sausageFights");
-    
-    
-    
-    //These ceilings are not correct; they are merely what I have spaded so far. The actual values are higher.
-    int [int] observed_ceilings = {0, 7, 10, 13, 16, 19, 23, 33, 54, 93, 154, 219, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220, 220};
-    
+
+    // The probability of a sausage goblin appearing after x goblins seen and y turns since last is:
+    // (y+1) / (5+x*3+max(0,x-5)^3)
+
+    int [int] observed_ceilings = {0, 7, 10, 13, 16, 19, 23, 33, 55, 95, 159, 253, 383, 555, 775, 1049, 1383, 1783, 2255, 2805, 3439, 4163, 4983, 5905, 6935, 8079, 9343, 10733, 12255, 13915, 15719, 17673, 19783, 22055, 24495, 27109, 29903, 32883, 36055, 39425, 42999, 46783, 50783, 55005, 59455, 64139, 69063, 74233, 79655, 85335};
+
     int turn_will_always_see_goblin = observed_ceilings[sausage_fights];
-    
     int delta = total_turns_played() - last_sausage_turn;
-    
-    
+
     information.turns_to_next_guaranteed_fight = MAX(0, turn_will_always_see_goblin - delta);
-    //Goblins do not appear on the same turn as semi-rares.
+    // Goblins do not appear on the same turn as semi-rares.
     if (information.turns_to_next_guaranteed_fight == 0 && CounterLookup("Semi-rare").CounterGetNextExactTurn() == 0)
-    	information.turns_to_next_guaranteed_fight += 1;
-    
+        information.turns_to_next_guaranteed_fight += 1;
+
     if (!(observed_ceilings contains sausage_fights))
-         information.turns_to_next_guaranteed_fight = -1;
-      
+        information.turns_to_next_guaranteed_fight = -1;
+
     if (turn_will_always_see_goblin > 1)
     {
-        //This is probably wrong?
-        float probability_each_incorrect = 1.0 / to_float(turn_will_always_see_goblin - 1);
-        information.probability_of_sausage_fight = clampf((delta + 1) * probability_each_incorrect, 0.0, 1.0);
+        float probability_each = 1.0 / (5.0 + sausage_fights * 3 + max(0, sausage_fights - 5) ** 3);
+        information.probability_of_sausage_fight = clampf((delta + 1) * probability_each, 0.0, 1.0);
     }
     information.goblin_will_appear = information.turns_to_next_guaranteed_fight == 0;
-    
-    
+
+
     return information;
 }

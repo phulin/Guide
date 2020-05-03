@@ -43,50 +43,43 @@ void IOTMKramcoSausageOMaticGenerateTasks(ChecklistEntry [int] task_entries, Che
 RegisterResourceGenerationFunction("IOTMKramcoSausageOMaticGenerateResource");
 void IOTMKramcoSausageOMaticGenerateResource(ChecklistEntry [int] resource_entries)
 {
-	if (!lookupItem("Kramco Sausage-o-Matic&trade;").have()) return;
-	
-	if (my_path_id() == PATH_LIVE_ASCEND_REPEAT) return;
+    if (!lookupItem("Kramco Sausage-o-Matic&trade;").have()) return;
+
+    if (my_path_id() == PATH_LIVE_ASCEND_REPEAT) return;
     ChecklistEntry entry;
     entry.image_lookup_name = "__item Kramco Sausage-o-Matic&trade;";
     entry.url = "inventory.php?action=grind";
     entry.importance_level = -2;
-    
-    
+
+
     string [int] main_description;
     string main_title = "Kramco Sausage-o-Matic&trade; fights";
-    
+
     KramcoSausageFightInformation fight_information = KramcoCalculateSausageFightInformation();
-    
-    
-    
-    
+
     if (fight_information.turns_to_next_guaranteed_fight == 0)
-	    main_title = "Sausage goblin fight now?";
+        main_title = "Sausage goblin fight now";
     else
-    	main_title = pluralise(fight_information.turns_to_next_guaranteed_fight, "turn(?)", "turns(?)") + " until next sausage goblin fight";
+        main_title = pluralise(fight_information.turns_to_next_guaranteed_fight, "turn", "turns") + " until next sausage goblin fight";
     if (fight_information.turns_to_next_guaranteed_fight > 0)
-	    main_description.listAppend(round(fight_information.probability_of_sausage_fight * 100.0) + "%(?) chance of goblin fight this turn.");
+        main_description.listAppend(round(fight_information.probability_of_sausage_fight * 100.0) + "% chance of goblin fight this turn.");
     main_description.listAppend("Does not cost a turn, burns delay.");
-       
+
     int fights_so_far = get_property_int("_sausageFights");
     if (fights_so_far > 0)
-	    main_description.listAppend("Fought " + pluralise(fights_so_far, "goblin", "goblins") + " so far.");
-    
+        main_description.listAppend("Fought " + pluralise(fights_so_far, "goblin", "goblins") + " so far.");
+
     entry.subentries.listAppend(ChecklistSubentryMake(main_title, "", main_description));
-	if (lookupItem("magical sausage casing").available_amount() > 0 && __misc_state["in run"])
-	{
+    if (lookupItem("magical sausage casing").available_amount() > 0 && __misc_state["in run"])
+    {
         //FIXME
         string [int] sausage_description;
         int sausages_made = get_property_int("_sausagesMade");
         int meat_cost = 111 * (sausages_made + 1);
         sausage_description.listAppend("+1 adventures each.");
         sausage_description.listAppend("Currently costs " + meat_cost + " meat to make one.");
-    	entry.subentries.listAppend(ChecklistSubentryMake(pluralise(lookupItem("magical sausage casing").available_amount(), "magical sausage", "magical sausages") + " creatable", "", sausage_description));
-	}
-	
-	
-	resource_entries.listAppend(entry);
-	
-	
-    //resource_entries.listAppend(ChecklistEntryMake("__item Kramco Sausage-o-Matic&trade;", "", ChecklistSubentryMake(title, "", "Free run/banish."), 6));
+        entry.subentries.listAppend(ChecklistSubentryMake(pluralise(lookupItem("magical sausage casing").available_amount(), "magical sausage", "magical sausages") + " creatable", "", sausage_description));
+    }
+
+    resource_entries.listAppend(entry);
 }
