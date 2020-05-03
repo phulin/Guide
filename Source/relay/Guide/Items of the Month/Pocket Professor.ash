@@ -1,3 +1,22 @@
+int thesisAdventures(int hp) {
+    return clampi(2 * floor(hp ** .25), 0, 11);
+}
+
+string scalerMessage(string name, int add, int cap) {
+    int ml = numeric_modifier('monster level');
+    int muscle = my_buffedstat($stat[muscle]);
+    int defense = clampi(muscle + add, 0, cap) + ml;
+    int hp = floor(0.75 * defense);
+    int adventures = thesisAdventures(hp);
+    string description = name + " (" + adventures + " advs";
+    if (adventures < 11 && cap + ml >= 1296 / .75) {
+        int muscle_to_cap = ceil(1296 / .75 - ml - add);
+        description += ", +" + (muscle_to_cap - muscle) + " mus for 11 advs";
+    }
+    description += ")";
+    return description;
+}
+
 RegisterResourceGenerationFunction("IOTMPocketProfessorGenerateResource");
 void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
 {
@@ -46,7 +65,7 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
         else
         {
             title = "Potential thesis";
-            int xp_lower_bound = 400 - (familiar_weight(prof) + 1) ** 2 - 1;
+            int xp_lower_bound = 400 - (familiar_weight(prof) + 1) ** 2 + 1;
             int xp_upper_bound = 400 - familiar_weight(prof) ** 2;
             description.listAppend(HTMLGenerateSpanFont("Need " + xp_lower_bound + "-" + xp_upper_bound + " more familiar XP.", "red"));
         }
@@ -58,11 +77,11 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
         string [int] potential_targets;
         if (lookupItem("kramco sausage-o-matic").available_amount() > 0)
         {
-            potential_targets.listAppend("Sausage goblin");
+            potential_targets.listAppend(scalerMessage("Sausage goblin", 11, 10000));
         }
-        else if (get_property_boolean("neverendingPartyAlways") || get_property_boolean("_neverendingPartyToday"))
+        if (get_property_boolean("neverendingPartyAlways") || get_property_boolean("_neverendingPartyToday"))
         {
-            potential_targets.listAppend("Neverending Party monster");
+            potential_targets.listAppend(scalerMessage("Neverending Party monster", 0, 20000));
         }
         if (potential_targets.count() > 0) {
             description.listAppend("Could use it on a:" + HTMLGenerateIndentedText(potential_targets));
