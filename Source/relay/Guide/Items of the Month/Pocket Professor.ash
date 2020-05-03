@@ -30,6 +30,9 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
     int lectures_used = get_property_int("_pocketProfessorLectures");
     int potential_weight = familiar_weight(prof) + weight_adjustment();
     int available_lectures = floor(sqrt(potential_weight - 1)) + 1 - lectures_used;
+    if (lookupItem("pocket professor memory chip").have_equipped()) {
+        available_lectures += 2;
+    }
 
     string url = "familiar.php";
     if (available_lectures > 0)
@@ -48,7 +51,11 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
 
         int weight_gain = (lectures_used + 2) ** 2 + 1 - potential_weight;
 
-        description.listAppend("Gain " + weight_gain + " lbs for an additional lecture.");
+        if (lookupItem("pocket professor memory chip").available_amount() == 0) {
+            description.listAppend("Gain " + weight_gain + " lbs for an additional lecture.");
+        } else {
+            description.listAppend("Gain " + weight_gain + " lbs or equip memory chip for an additional lecture.");
+        }
 
         resource_entries.listAppend(ChecklistEntryMake("__familiar pocket professor", url, ChecklistSubentryMake(lectures_used + " lectures used", "", description), 1));
     }
