@@ -10,8 +10,10 @@ string scalerMessage(string name, int add, int cap) {
     int adventures = thesisAdventures(hp);
     string description = name + " (" + adventures + " advs";
     if (adventures < 11 && cap + ml >= 1296 / .75) {
-        int muscle_to_cap = ceil(1296 / .75 - ml - add);
-        description += ", +" + (muscle_to_cap - muscle) + " mus for 11 advs";
+        int next_adventures = adventures + 2;
+        int next_threshhold = (next_adventures / 2) ** 4;
+        int muscle_to_cap = ceil(next_threshhold / .75 - ml - add);
+        description += ", +" + (muscle_to_cap - muscle) + " mus for " + clampi(next_adventures, 0, 11) + " advs";
     }
     description += ")";
     return description;
@@ -22,7 +24,7 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
 {
     familiar prof = lookupFamiliar("pocket professor");
 
-	if (!prof.familiar_is_usable()) return;
+    if (!prof.familiar_is_usable()) return;
 
     // see https://kolmafia.us/showthread.php?24196-September-2019-IotM-Pocket-Professor
     if (!mafiaIsPastRevision(19569)) return;
@@ -43,15 +45,23 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
         description.listAppend("Mass: Get three chances at any item drops.");
         description.listAppend("Velocity: Delevel and substat boost.");
 
-        resource_entries.listAppend(ChecklistEntryMake("__familiar pocket professor", url, ChecklistSubentryMake(available_lectures + " lectures available", "", description), 1));
+        string title;
+        if (available_lectures == 1) {
+            title = available_lectures + " lecture available";
+        } else {
+            title = available_lectures + " lectures available";
+        }
+
+        resource_entries.listAppend(ChecklistEntryMake("__familiar pocket professor", url, ChecklistSubentryMake(title, "", description), 1));
     }
     else if (available_lectures == 0)
     {
         string [int] description;
 
-        int weight_gain = (lectures_used + 2) ** 2 + 1 - potential_weight;
+        int weight_gain = lectures_used ** 2 + 1 - potential_weight;
 
-        if (lookupItem("pocket professor memory chip").available_amount() == 0) {
+        item chip = lookupItem("pocket professor memory chip");
+        if (chip.available_amount() == 0 || have_equipped(chip)) {
             description.listAppend("Gain " + weight_gain + " lbs for an additional lecture.");
         } else {
             description.listAppend("Gain " + weight_gain + " lbs or equip memory chip for an additional lecture.");
@@ -60,21 +70,20 @@ void IOTMPocketProfessorGenerateResource(ChecklistEntry [int] resource_entries)
         resource_entries.listAppend(ChecklistEntryMake("__familiar pocket professor", url, ChecklistSubentryMake(lectures_used + " lectures used", "", description), 1));
     }
 
-    if (familiar_weight(prof) >= 15)
+    if (familiar_weight(prof) >= 15 && !get_property_boolean('_thesisDelivered'))
     {
         string title;
         string [int] description;
 
-        if (familiar_weight(prof) == 20)
+        if (prof.experience >= 400)
         {
             title = "Thesis available";
         }
         else
         {
             title = "Potential thesis";
-            int xp_lower_bound = 400 - (familiar_weight(prof) + 1) ** 2 + 1;
-            int xp_upper_bound = 400 - familiar_weight(prof) ** 2;
-            description.listAppend(HTMLGenerateSpanFont("Need " + xp_lower_bound + "-" + xp_upper_bound + " more familiar XP.", "red"));
+            int xp_needed = 400 - prof.experience;
+            description.listAppend(HTMLGenerateSpanFont("Need " + xp_needed + " more familiar XP.", "red"));
         }
 
         description.listAppend("Deliver thesis skill in combat to gain adventures based on HP of monster.");
